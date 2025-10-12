@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -78,6 +79,20 @@ fun RandomTapRushApp() {
     var state by remember { mutableStateOf(GameState()) }
     var playAreaSize by remember { mutableStateOf(Offset.Zero) }
 
+    fun randomTarget(): Pair<Offset, Float> {
+        val width = playAreaSize.x
+        val height = playAreaSize.y
+        if (width <= 0f || height <= 0f) {
+            return state.targetPosition to state.targetRadius
+        }
+        val minRadius = min(width, height) * 0.1f
+        val maxRadius = min(width, height) * 0.25f
+        val radius = Random.nextFloat() * (maxRadius - minRadius) + minRadius
+        val x = Random.nextFloat() * (width - radius * 2) + radius
+        val y = Random.nextFloat() * (height - radius * 2) + radius
+        return Offset(x, y) to radius
+    }
+
     LaunchedEffect(state.isRunning) {
         if (state.isRunning) {
             while (state.timeRemaining > 0) {
@@ -93,20 +108,6 @@ fun RandomTapRushApp() {
             val (target, radius) = randomTarget()
             state = state.copy(targetPosition = target, targetRadius = radius)
         }
-    }
-
-    fun randomTarget(): Pair<Offset, Float> {
-        val width = playAreaSize.x
-        val height = playAreaSize.y
-        if (width <= 0f || height <= 0f) {
-            return state.targetPosition to state.targetRadius
-        }
-        val minRadius = min(width, height) * 0.1f
-        val maxRadius = min(width, height) * 0.25f
-        val radius = Random.nextFloat() * (maxRadius - minRadius) + minRadius
-        val x = Random.nextFloat() * (width - radius * 2) + radius
-        val y = Random.nextFloat() * (height - radius * 2) + radius
-        return Offset(x, y) to radius
     }
 
     fun resetGame() {
@@ -257,6 +258,8 @@ fun TargetCircle(state: GameState, onHit: () -> Unit) {
     val diameterDp = with(density) { (radiusPx * 2f).toDp() }
     val offsetXDp = with(density) { (state.targetPosition.x - radiusPx).toDp() }
     val offsetYDp = with(density) { (state.targetPosition.y - radiusPx).toDp() }
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val ringColor = Color.White.copy(alpha = 0.2f)
 
     Box(
         modifier = Modifier
@@ -271,8 +274,8 @@ fun TargetCircle(state: GameState, onHit: () -> Unit) {
                 .clickable { onHit() }
         ) {
             Canvas(modifier = Modifier.fillMaxSize()) {
-                drawCircle(color = MaterialTheme.colorScheme.primary, radius = size.minDimension / 2f)
-                drawCircle(color = Color.White.copy(alpha = 0.2f), radius = size.minDimension / 2f, style = Stroke(width = 12f))
+                drawCircle(color = primaryColor, radius = size.minDimension / 2f)
+                drawCircle(color = ringColor, radius = size.minDimension / 2f, style = Stroke(width = 12f))
             }
         }
     }
